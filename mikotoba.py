@@ -1,23 +1,34 @@
 import re
+import os
 import streamlit as st
 
 st.title("御言葉")
 
-# 表示したい長文（ファイルから読み込むことも可能）
-# ファイル名（文字コード UTF-8 を指定）
-file_path = "御言葉のまとめ.txt"
+# 選択肢と対応するファイル名
+FILES = {
+    "まとめ": "御言葉のまとめ.txt",
+    "2025": "御言葉のまとめ2025.txt"
+}
+
+# 上部に切り替え用リンク風ボタン（ラジオボタンを横並びで配置）
+selected_name = st.radio("表示するまとめを選択", list(FILES.keys()), horizontal=True)
+selected_file = FILES[selected_name]
 
 # ファイルを開いて全文を読み込む
-# UTF-8 で開き、ダメなら cp932 で開く（自動判定）
-try:
-    with open(file_path, "r", encoding="utf-8") as f:
-        text = f.read()
-except UnicodeDecodeError:
-    with open(file_path, "r", encoding="cp932", errors="ignore") as f:
-        text = f.read()
+text = ""
+if os.path.exists(selected_file):
+    try:
+        with open(selected_file, "r", encoding="utf-8") as f:
+            text = f.read()
+    except UnicodeDecodeError:
+        with open(selected_file, "r", encoding="cp932", errors="ignore") as f:
+            text = f.read()
+else:
+    st.error(f"ファイルが見つかりません: {selected_file}")
+    st.stop()
 
-# 検索フォーム
-query = st.text_input("検索したい単語を入力")
+# 検索フォーム（file_pathごとに別キーにしておくことで切替時に自動リセット）
+query = st.text_input("検索したい単語を入力", key=f"search_{selected_file}")
 
 if query:
     # 検索キーワードが出現する箇所を特定
